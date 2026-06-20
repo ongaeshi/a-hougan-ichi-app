@@ -20,6 +20,7 @@ function App() {
   const [gameState, setGameState] = useState<GameState>('start');
   const [gridSize, setGridSize] = useState<number>(5);
   const [includeBottom, setIncludeBottom] = useState<boolean>(false);
+  const [maxRepeats, setMaxRepeats] = useState<number | 'unlimited'>('unlimited');
   
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIdx, setCurrentIdx] = useState<number>(0);
@@ -28,6 +29,7 @@ function App() {
   const [selectedCell, setSelectedCell] = useState<{r: number, c: number} | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [waitingNext, setWaitingNext] = useState<boolean>(false);
+  const [repeatsLeft, setRepeatsLeft] = useState<number | 'unlimited'>('unlimited');
 
   // Generate questions when starting
   const startGame = () => {
@@ -54,6 +56,7 @@ function App() {
     setSelectedCell(null);
     setIsCorrect(null);
     setWaitingNext(false);
+    setRepeatsLeft(maxRepeats);
     setGameState('playing');
   };
 
@@ -96,6 +99,7 @@ function App() {
       setWaitingNext(false);
       if (currentIdx + 1 < TOTAL_QUESTIONS) {
         setCurrentIdx(i => i + 1);
+        setRepeatsLeft(maxRepeats);
       } else {
         setGameState('result');
       }
@@ -104,7 +108,12 @@ function App() {
 
   const repeatQuestion = () => {
     if (gameState === 'playing' && !waitingNext) {
-      speak(questions[currentIdx].text);
+      if (repeatsLeft === 'unlimited' || repeatsLeft > 0) {
+        speak(questions[currentIdx].text);
+        if (typeof repeatsLeft === 'number') {
+          setRepeatsLeft(r => (r as number) - 1);
+        }
+      }
     }
   };
 
@@ -155,6 +164,24 @@ function App() {
                 />
                 <span className="radio-label">応用（下も含める）</span>
               </label>
+            </div>
+          </div>
+
+          <div className="settings-group">
+            <span className="settings-label">ききなおし</span>
+            <div className="radio-group">
+              {[0, 3, 5, 'unlimited'].map(limit => (
+                <label key={limit}>
+                  <input 
+                    type="radio" 
+                    name="maxRepeats" 
+                    className="radio-input"
+                    checked={maxRepeats === limit} 
+                    onChange={() => setMaxRepeats(limit as number | 'unlimited')} 
+                  />
+                  <span className="radio-label">{limit === 'unlimited' ? 'むげん' : `${limit}回`}</span>
+                </label>
+              ))}
             </div>
           </div>
 
@@ -218,8 +245,12 @@ function App() {
             >
               けってい
             </button>
-            <button className="btn" onClick={repeatQuestion} disabled={waitingNext}>
-              もういちどきく 🔊
+            <button 
+              className="btn" 
+              onClick={repeatQuestion} 
+              disabled={waitingNext || repeatsLeft === 0}
+            >
+              もういちどきく 🔊 {repeatsLeft !== 'unlimited' && `(あと${repeatsLeft}回)`}
             </button>
           </div>
         </div>
