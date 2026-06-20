@@ -182,14 +182,21 @@ function App() {
           >
             {Array.from({ length: gridSize }).map((_, r) => 
               Array.from({ length: gridSize }).map((_, c) => {
+                const q = questions[currentIdx];
+                const isActualCorrect = q?.row === r && q?.col === c;
                 const isSelected = selectedCell?.r === r && selectedCell?.c === c;
                 let cellClass = 'grid-cell';
+                
                 if (isSelected) {
                   if (isCorrect === null) {
                     cellClass += ' selected';
                   } else {
                     cellClass += isCorrect ? ' correct' : ' incorrect';
                   }
+                }
+                
+                if (isCorrect === false && isActualCorrect) {
+                  cellClass += ' hint-correct';
                 }
                 
                 return (
