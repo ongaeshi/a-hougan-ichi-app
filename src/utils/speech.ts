@@ -9,7 +9,7 @@ export const speak = (text: string) => {
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'ja-JP';
-  utterance.rate = 0.9; // Slightly slower for kids
+  utterance.rate = 0.8; // Slower for kids
   utterance.pitch = 1.1; // Slightly higher pitch
 
   // Try to find a female/child-like Japanese voice if available
