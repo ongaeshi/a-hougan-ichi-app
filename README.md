@@ -1,73 +1,34 @@
-# React + TypeScript + Vite
+# 小学校受験「方眼上の位置」Webアプリ
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+お子様が小学校受験の「方眼上の位置」問題を楽しく、視覚と聴覚を使って学べるWebアプリです。
 
-Currently, two official plugins are available:
+## 目的
+- 「上から○番目、右（左）から●番目」といった音声指示を聞き取り、正しいマスをタップするトレーニングを行う。
+- 直感的な操作と、美しく楽しいUIでモチベーションを維持する。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 機能と仕様
+### 基本ルール
+- 5×5の方眼（グリッド）を表示します。
+- 「上から2番目、右から3番目」のような指示が合成音声で自動再生されます。
+- 正しいマスをタップすると「正解（ピンポン）」、間違えると「不正解（ブブー）」と音が鳴り、視覚的なフィードバック（丸やバツ）を表示します。
+- 10問連続で出題され、最後に正答率（スコア）を表示します。
 
-## React Compiler
+## 技術スタック
+- **開発フレームワーク**: React + TypeScript (Vite)
+- **スタイリング**: Vanilla CSS / CSS Modules (Tailwindは不使用)
+- **音声合成**: Web Speech API (SpeechSynthesis)
+- **効果音**: Web Audio API または音声ファイル
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 開発の始め方
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+パッケージのインストール:
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+開発サーバーの起動:
+```bash
+npm run dev
 ```
+
+ブラウザで `http://localhost:5173` （またはターミナルに表示されたURL）を開いてアプリを確認できます。
