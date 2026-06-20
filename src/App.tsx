@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import Confetti from 'react-confetti';
 import { speak } from './utils/speech';
-import { playCorrectSound, playIncorrectSound } from './utils/audio';
+import { playCorrectSound, playIncorrectSound, playPerfectSound } from './utils/audio';
 
 type GameState = 'start' | 'playing' | 'result';
 type DirectionY = 'top' | 'bottom';
@@ -59,6 +60,13 @@ function App() {
     setRepeatsLeft(maxRepeats);
     setGameState('playing');
   };
+
+  // Play perfect sound when transitioning to result screen with a perfect score
+  useEffect(() => {
+    if (gameState === 'result' && score === TOTAL_QUESTIONS) {
+      playPerfectSound();
+    }
+  }, [gameState, score]);
 
   useEffect(() => {
     if (gameState === 'playing' && !waitingNext) {
@@ -258,6 +266,7 @@ function App() {
 
       {gameState === 'result' && (
         <div className="result-container">
+          {score === TOTAL_QUESTIONS && <Confetti recycle={false} numberOfPieces={500} />}
           <h1 className="title">けっか</h1>
           <div className="score">{score} / {TOTAL_QUESTIONS}</div>
           <div className="score-text">
