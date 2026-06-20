@@ -69,11 +69,15 @@ function App() {
 
   const handleCellClick = (r: number, c: number) => {
     if (waitingNext || gameState !== 'playing') return;
-    
-    const q = questions[currentIdx];
     setSelectedCell({ r, c });
+  };
+
+  const handleConfirm = () => {
+    if (waitingNext || gameState !== 'playing' || !selectedCell) return;
+
+    const q = questions[currentIdx];
     
-    if (q.row === r && q.col === c) {
+    if (q.row === selectedCell.r && q.col === selectedCell.c) {
       // Correct
       setIsCorrect(true);
       setScore(s => s + 1);
@@ -181,7 +185,11 @@ function App() {
                 const isSelected = selectedCell?.r === r && selectedCell?.c === c;
                 let cellClass = 'grid-cell';
                 if (isSelected) {
-                  cellClass += isCorrect ? ' correct' : ' incorrect';
+                  if (isCorrect === null) {
+                    cellClass += ' selected';
+                  } else {
+                    cellClass += isCorrect ? ' correct' : ' incorrect';
+                  }
                 }
                 
                 return (
@@ -195,9 +203,18 @@ function App() {
             )}
           </div>
           
-          <button className="btn" onClick={repeatQuestion} disabled={waitingNext}>
-            もういちどきく 🔊
-          </button>
+          <div className="action-buttons">
+            <button 
+              className="btn confirm-btn" 
+              onClick={handleConfirm} 
+              disabled={waitingNext || !selectedCell}
+            >
+              けってい
+            </button>
+            <button className="btn" onClick={repeatQuestion} disabled={waitingNext}>
+              もういちどきく 🔊
+            </button>
+          </div>
         </div>
       )}
 
