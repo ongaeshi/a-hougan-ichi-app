@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { speak } from './utils/speech';
 import { playCorrectSound, playIncorrectSound } from './utils/audio';
 
