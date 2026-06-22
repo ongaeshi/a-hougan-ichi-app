@@ -31,7 +31,6 @@ function App() {
   
   const [questionPhase, setQuestionPhase] = useState<QuestionPhase>('read_all');
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
-  const [sliderCol, setSliderCol] = useState<number>(0); // 0 から gridSize-1 までの値
   
   const [selectedCell, setSelectedCell] = useState<{r: number, c: number} | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -62,7 +61,6 @@ function App() {
     setScore(0);
     setSelectedCell(null);
     setSelectedRow(null);
-    setSliderCol(0);
     setQuestionPhase(isGuideEnabled ? 'select_row' : 'read_all');
     setIsCorrect(null);
     setWaitingNext(false);
@@ -104,30 +102,15 @@ function App() {
     
     if (questionPhase === 'select_row') {
       setSelectedRow(r);
-      // Initialize slider near the center depending on gridSize
-      setSliderCol(Math.floor(gridSize / 2));
       setQuestionPhase('select_col');
-    } else if (questionPhase === 'read_all') {
-      setSelectedCell({ r, c });
+      return;
     }
-  };
 
-  const handleConfirm = () => {
-    if (waitingNext || gameState !== 'playing') return;
-
+    // questionPhase === 'read_all' または 'select_col' の場合は即時判定
     const q = questions[currentIdx];
-    let selectedR = selectedCell?.r;
-    let selectedC = selectedCell?.c;
+    setSelectedCell({ r, c });
 
-    if (questionPhase === 'select_col' && selectedRow !== null) {
-      selectedR = selectedRow;
-      selectedC = sliderCol;
-      setSelectedCell({ r: selectedRow, c: sliderCol }); // Update visual state for result
-    }
-
-    if (selectedR === undefined || selectedC === undefined) return;
-    
-    if (q.row === selectedR && q.col === selectedC) {
+    if (q.row === r && q.col === c) {
       // Correct
       setIsCorrect(true);
       setScore(s => s + 1);
@@ -143,7 +126,6 @@ function App() {
     setTimeout(() => {
       setSelectedCell(null);
       setSelectedRow(null);
-      setSliderCol(0);
       setQuestionPhase(isGuideEnabled ? 'select_row' : 'read_all');
       setIsCorrect(null);
       setWaitingNext(false);
@@ -288,7 +270,7 @@ function App() {
             {waitingNext ? (isCorrect ? 'せいかい！' : 'ざんねん！') : 
               (questionPhase === 'read_all' ? 'きいて、タップしてね' : 
                questionPhase === 'select_row' ? 'どの行かな？（タップしてね）' : 
-               'どのマスかな？（スライダーを動かして「けってい」してね）')}
+               'どのマスかな？（タップしてね）')}
           </div>
 
           <div 
@@ -304,10 +286,8 @@ function App() {
                 const isActualCorrect = q?.row === r && q?.col === c;
                 
                 let isSelected = false;
-                if (questionPhase === 'read_all' || waitingNext) {
+                if (waitingNext) {
                   isSelected = selectedCell?.r === r && selectedCell?.c === c;
-                } else if (questionPhase === 'select_col') {
-                  isSelected = selectedRow === r && sliderCol === c;
                 }
 
                 let cellClass = 'grid-cell';
@@ -339,27 +319,7 @@ function App() {
             )}
           </div>
           
-          {questionPhase === 'select_col' && !waitingNext && (
-            <div className="slider-container" style={{ maxWidth: `${gridSize * 70}px` }}>
-              <input 
-                type="range" 
-                min="0" 
-                max={gridSize - 1} 
-                value={sliderCol} 
-                onChange={(e) => setSliderCol(parseInt(e.target.value))}
-                className="col-slider"
-              />
-            </div>
-          )}
-
           <div className="action-buttons">
-            <button 
-              className="btn confirm-btn" 
-              onClick={handleConfirm} 
-              disabled={waitingNext || (questionPhase === 'read_all' && !selectedCell) || questionPhase === 'select_row'}
-            >
-              けってい
-            </button>
             <button 
               className="btn" 
               onClick={repeatQuestion} 
