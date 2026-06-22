@@ -327,6 +327,22 @@ function App() {
             >
               もういちどきく 🔊 {repeatsLeft !== 'unlimited' && `(あと${repeatsLeft}回)`}
             </button>
+            {isGuideEnabled && (
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setSelectedRow(null);
+                  setQuestionPhase('select_row');
+                  const q = questions[currentIdx];
+                  const textY = q.dirY === 'top' ? '上' : '下';
+                  const displayRow = q.dirY === 'top' ? q.row + 1 : gridSize - q.row;
+                  speak(`${textY}から、${displayRow}番目。`);
+                }}
+                disabled={waitingNext || questionPhase !== 'select_col'}
+              >
+                やりなおす ↩️
+              </button>
+            )}
           </div>
         </div>
       )}
