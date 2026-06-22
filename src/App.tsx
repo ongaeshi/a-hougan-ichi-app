@@ -4,6 +4,7 @@ import { speak } from './utils/speech';
 import { playCorrectSound, playIncorrectSound, playPerfectSound } from './utils/audio';
 
 type GameState = 'start' | 'playing' | 'result';
+type QuestionPhase = 'read_all' | 'select_row' | 'select_col';
 type DirectionY = 'top' | 'bottom';
 type DirectionX = 'left' | 'right';
 
@@ -22,10 +23,15 @@ function App() {
   const [gridSize, setGridSize] = useState<number>(5);
   const [includeBottom, setIncludeBottom] = useState<boolean>(false);
   const [maxRepeats, setMaxRepeats] = useState<number | 'unlimited'>('unlimited');
+  const [isGuideEnabled, setIsGuideEnabled] = useState<boolean>(false);
   
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [score, setScore] = useState<number>(0);
+  
+  const [questionPhase, setQuestionPhase] = useState<QuestionPhase>('read_all');
+  const [selectedRow, setSelectedRow] = useState<number | null>(null);
+  const [sliderCol, setSliderCol] = useState<number>(0); // 0 から gridSize-1 までの値
   
   const [selectedCell, setSelectedCell] = useState<{r: number, c: number} | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -55,6 +61,9 @@ function App() {
     setCurrentIdx(0);
     setScore(0);
     setSelectedCell(null);
+    setSelectedRow(null);
+    setSliderCol(0);
+    setQuestionPhase(isGuideEnabled ? 'select_row' : 'read_all');
     setIsCorrect(null);
     setWaitingNext(false);
     setRepeatsLeft(maxRepeats);
@@ -73,22 +82,52 @@ function App() {
       const q = questions[currentIdx];
       if (q) {
         // Small delay before speaking so UI has time to render
-        setTimeout(() => speak(q.text), 500);
+        setTimeout(() => {
+          if (questionPhase === 'read_all') {
+            speak(q.text);
+          } else if (questionPhase === 'select_row') {
+            const textY = q.dirY === 'top' ? '上' : '下';
+            const displayRow = q.dirY === 'top' ? q.row + 1 : gridSize - q.row;
+            speak(`${textY}から、${displayRow}番目。`);
+          } else if (questionPhase === 'select_col') {
+            const textX = q.dirX === 'left' ? '左' : '右';
+            const displayCol = q.dirX === 'left' ? q.col + 1 : gridSize - q.col;
+            speak(`${textX}から、${displayCol}番目。`);
+          }
+        }, 500);
       }
     }
-  }, [gameState, currentIdx, questions, waitingNext]);
+  }, [gameState, currentIdx, questions, waitingNext, questionPhase, gridSize]);
 
   const handleCellClick = (r: number, c: number) => {
     if (waitingNext || gameState !== 'playing') return;
-    setSelectedCell({ r, c });
+    
+    if (questionPhase === 'select_row') {
+      setSelectedRow(r);
+      // Initialize slider near the center depending on gridSize
+      setSliderCol(Math.floor(gridSize / 2));
+      setQuestionPhase('select_col');
+    } else if (questionPhase === 'read_all') {
+      setSelectedCell({ r, c });
+    }
   };
 
   const handleConfirm = () => {
-    if (waitingNext || gameState !== 'playing' || !selectedCell) return;
+    if (waitingNext || gameState !== 'playing') return;
 
     const q = questions[currentIdx];
+    let selectedR = selectedCell?.r;
+    let selectedC = selectedCell?.c;
+
+    if (questionPhase === 'select_col' && selectedRow !== null) {
+      selectedR = selectedRow;
+      selectedC = sliderCol;
+      setSelectedCell({ r: selectedRow, c: sliderCol }); // Update visual state for result
+    }
+
+    if (selectedR === undefined || selectedC === undefined) return;
     
-    if (q.row === selectedCell.r && q.col === selectedCell.c) {
+    if (q.row === selectedR && q.col === selectedC) {
       // Correct
       setIsCorrect(true);
       setScore(s => s + 1);
@@ -103,6 +142,9 @@ function App() {
     
     setTimeout(() => {
       setSelectedCell(null);
+      setSelectedRow(null);
+      setSliderCol(0);
+      setQuestionPhase(isGuideEnabled ? 'select_row' : 'read_all');
       setIsCorrect(null);
       setWaitingNext(false);
       if (currentIdx + 1 < TOTAL_QUESTIONS) {
@@ -117,7 +159,19 @@ function App() {
   const repeatQuestion = () => {
     if (gameState === 'playing' && !waitingNext) {
       if (repeatsLeft === 'unlimited' || repeatsLeft > 0) {
-        speak(questions[currentIdx].text);
+        const q = questions[currentIdx];
+        if (questionPhase === 'read_all') {
+          speak(q.text);
+        } else if (questionPhase === 'select_row') {
+          const textY = q.dirY === 'top' ? '上' : '下';
+          const displayRow = q.dirY === 'top' ? q.row + 1 : gridSize - q.row;
+          speak(`${textY}から、${displayRow}番目。`);
+        } else if (questionPhase === 'select_col') {
+          const textX = q.dirX === 'left' ? '左' : '右';
+          const displayCol = q.dirX === 'left' ? q.col + 1 : gridSize - q.col;
+          speak(`${textX}から、${displayCol}番目。`);
+        }
+        
         if (typeof repeatsLeft === 'number') {
           setRepeatsLeft(r => (r as number) - 1);
         }
@@ -193,6 +247,32 @@ function App() {
             </div>
           </div>
 
+          <div className="settings-group">
+            <span className="settings-label">ガイド機能</span>
+            <div className="radio-group">
+              <label>
+                <input 
+                  type="radio" 
+                  name="guideEnabled" 
+                  className="radio-input"
+                  checked={!isGuideEnabled} 
+                  onChange={() => setIsGuideEnabled(false)} 
+                />
+                <span className="radio-label">なし（本番用）</span>
+              </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="guideEnabled" 
+                  className="radio-input"
+                  checked={isGuideEnabled} 
+                  onChange={() => setIsGuideEnabled(true)} 
+                />
+                <span className="radio-label">あり（練習用）</span>
+              </label>
+            </div>
+          </div>
+
           <button className="btn" onClick={startGame}>スタート！</button>
         </div>
       )}
@@ -205,11 +285,14 @@ function App() {
           </div>
           
           <div className="question-text">
-            {waitingNext ? (isCorrect ? 'せいかい！' : 'ざんねん！') : 'きいて、タップしてね'}
+            {waitingNext ? (isCorrect ? 'せいかい！' : 'ざんねん！') : 
+              (questionPhase === 'read_all' ? 'きいて、タップしてね' : 
+               questionPhase === 'select_row' ? 'どの行かな？（タップしてね）' : 
+               'どのマスかな？（スライダーを動かして「けってい」してね）')}
           </div>
 
           <div 
-            className="grid-container" 
+            className={`grid-container ${questionPhase === 'select_row' ? 'row-selectable' : ''}`}
             style={{ 
               gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
               maxWidth: `${gridSize * 70}px`
@@ -219,8 +302,19 @@ function App() {
               Array.from({ length: gridSize }).map((_, c) => {
                 const q = questions[currentIdx];
                 const isActualCorrect = q?.row === r && q?.col === c;
-                const isSelected = selectedCell?.r === r && selectedCell?.c === c;
+                
+                let isSelected = false;
+                if (questionPhase === 'read_all' || waitingNext) {
+                  isSelected = selectedCell?.r === r && selectedCell?.c === c;
+                } else if (questionPhase === 'select_col') {
+                  isSelected = selectedRow === r && sliderCol === c;
+                }
+
                 let cellClass = 'grid-cell';
+                
+                if (isGuideEnabled && questionPhase === 'select_col' && selectedRow !== null && r !== selectedRow) {
+                  cellClass += ' dimmed';
+                }
                 
                 if (isSelected) {
                   if (isCorrect === null) {
@@ -245,11 +339,24 @@ function App() {
             )}
           </div>
           
+          {questionPhase === 'select_col' && !waitingNext && (
+            <div className="slider-container" style={{ maxWidth: `${gridSize * 70}px` }}>
+              <input 
+                type="range" 
+                min="0" 
+                max={gridSize - 1} 
+                value={sliderCol} 
+                onChange={(e) => setSliderCol(parseInt(e.target.value))}
+                className="col-slider"
+              />
+            </div>
+          )}
+
           <div className="action-buttons">
             <button 
               className="btn confirm-btn" 
               onClick={handleConfirm} 
-              disabled={waitingNext || !selectedCell}
+              disabled={waitingNext || (questionPhase === 'read_all' && !selectedCell) || questionPhase === 'select_row'}
             >
               けってい
             </button>
