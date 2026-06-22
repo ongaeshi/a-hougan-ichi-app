@@ -1,3 +1,9 @@
+# Critical Technical Rules
+- **OS Environment**: Windows
+- **Command Execution**: To ensure terminal processes (Node.js, npm, etc.) terminate correctly on Windows, you must **always** prepend `cmd /c` to all shell commands.
+  - Example: `cmd /c npm install`, `cmd /c npm run dev`, `cmd /c node server.js`.
+  - Failure to do this will cause the process to hang; this is mandatory.
+
 # Project Information: Elementary School Admission "Grid Position" Web App
 
 This project is a web application designed to help children enjoyably learn "grid position" problems for elementary school admissions using visual and auditory senses.
