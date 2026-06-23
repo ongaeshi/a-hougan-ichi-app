@@ -15,6 +15,8 @@ body {
   margin: 0;
   font-family: 'Inter', 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
   background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+  -webkit-user-select: none;
+  user-select: none;
   color: var(--text-color);
   min-height: 100vh;
   display: flex;
@@ -162,11 +164,6 @@ body {
   font-size: 2rem;
   position: relative;
   overflow: hidden;
-}
-
-.grid-cell:hover {
-  background-color: var(--cell-hover);
-  transform: scale(1.05);
 }
 
 .grid-cell:active {
