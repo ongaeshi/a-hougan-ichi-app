@@ -6,6 +6,7 @@ import { playCorrectSound, playIncorrectSound, playPerfectSound } from './utils/
 type GameState = 'start' | 'playing' | 'result';
 type DirectionY = 'top' | 'bottom';
 type DirectionX = 'left' | 'right';
+type DifficultyMode = '1d-y' | '1d-x' | '2d';
 
 interface Question {
   row: number;
@@ -20,6 +21,7 @@ const TOTAL_QUESTIONS = 10;
 function App() {
   const [gameState, setGameState] = useState<GameState>('start');
   const [gridSize, setGridSize] = useState<number>(5);
+  const [difficulty, setDifficulty] = useState<DifficultyMode>('2d');
   const [includeBottom, setIncludeBottom] = useState<boolean>(false);
   const [maxRepeats, setMaxRepeats] = useState<number | 'unlimited'>('unlimited');
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -35,8 +37,8 @@ function App() {
   const startGame = () => {
     const newQuestions: Question[] = [];
     for (let i = 0; i < TOTAL_QUESTIONS; i++) {
-      const r = Math.floor(Math.random() * gridSize);
-      const c = Math.floor(Math.random() * gridSize);
+      const r = difficulty === '1d-x' ? 0 : Math.floor(Math.random() * gridSize);
+      const c = difficulty === '1d-y' ? 0 : Math.floor(Math.random() * gridSize);
       
       const dirY: DirectionY = includeBottom && Math.random() > 0.5 ? 'bottom' : 'top';
       const dirX: DirectionX = Math.random() > 0.5 ? 'right' : 'left';
@@ -46,7 +48,15 @@ function App() {
       
       const textY = dirY === 'top' ? '上' : '下';
       const textX = dirX === 'left' ? '左' : '右';
-      const text = `${textY}から、${displayRow}番目。${textX}から、${displayCol}番目`;
+      
+      let text = '';
+      if (difficulty === '1d-y') {
+        text = `${textY}から、${displayRow}番目`;
+      } else if (difficulty === '1d-x') {
+        text = `${textX}から、${displayCol}番目`;
+      } else {
+        text = `${textY}から、${displayRow}番目。${textX}から、${displayCol}番目`;
+      }
       
       newQuestions.push({ row: r, col: c, dirY, dirX, text });
     }
@@ -128,12 +138,51 @@ function App() {
     }
   };
 
+  const gridRows = difficulty === '1d-x' ? 1 : gridSize;
+  const gridCols = difficulty === '1d-y' ? 1 : gridSize;
+
   return (
     <div className="app-container">
       {gameState === 'start' && (
         <div className="start-screen">
           <h1 className="title">方眼上の位置</h1>
           
+          <div className="settings-group">
+            <span className="settings-label">なんいど</span>
+            <div className="radio-group" style={{ flexWrap: 'wrap' }}>
+              <label>
+                <input 
+                  type="radio" 
+                  name="difficulty" 
+                  className="radio-input"
+                  checked={difficulty === '1d-y'} 
+                  onChange={() => setDifficulty('1d-y')} 
+                />
+                <span className="radio-label">1(たて)</span>
+              </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="difficulty" 
+                  className="radio-input"
+                  checked={difficulty === '1d-x'} 
+                  onChange={() => setDifficulty('1d-x')} 
+                />
+                <span className="radio-label">2(よこ)</span>
+              </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="difficulty" 
+                  className="radio-input"
+                  checked={difficulty === '2d'} 
+                  onChange={() => setDifficulty('2d')} 
+                />
+                <span className="radio-label">3(ほうがん)</span>
+              </label>
+            </div>
+          </div>
+
           <div className="settings-group">
             <span className="settings-label">マスの数</span>
             <div className="radio-group">
@@ -214,14 +263,15 @@ function App() {
           </div>
 
           <div 
-            className="grid-container"
+            className={`grid-container mode-${difficulty}`}
             style={{ 
-              gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
-              maxWidth: `${gridSize * 70}px`
-            }}
+              gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+              maxWidth: `${gridSize * 70}px`,
+              '--full-size': `${gridSize * 60 + (gridSize - 1) * 8}px`
+            } as React.CSSProperties}
           >
-            {Array.from({ length: gridSize }).map((_, r) => 
-              Array.from({ length: gridSize }).map((_, c) => {
+            {Array.from({ length: gridRows }).map((_, r) => 
+              Array.from({ length: gridCols }).map((_, c) => {
                 const q = questions[currentIdx];
                 const isActualCorrect = q?.row === r && q?.col === c;
                 

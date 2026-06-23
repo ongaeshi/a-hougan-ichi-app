@@ -170,9 +170,27 @@ body {
   transform: scale(0.95);
 }
 
+.mode-1d-y .grid-cell {
+  width: var(--full-size);
+}
+
+.mode-1d-x .grid-cell {
+  height: var(--full-size);
+}
+
 .grid-cell.selected {
   background-color: #ce93d8;
   border-color: #8e24aa;
+}
+
+.mode-1d-y .grid-cell.selected {
+  background-color: #ef9a9a;
+  border-color: #e53935;
+}
+
+.mode-1d-x .grid-cell.selected {
+  background-color: #90caf9;
+  border-color: #1e88e5;
 }
 
 .grid-cell.correct {
