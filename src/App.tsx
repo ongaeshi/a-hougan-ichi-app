@@ -149,7 +149,7 @@ function App() {
           
           <div className="settings-group">
             <span className="settings-label">なんいど</span>
-            <div className="radio-group" style={{ flexWrap: 'wrap' }}>
+            <div className="radio-group">
               <label>
                 <input 
                   type="radio" 
