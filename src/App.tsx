@@ -158,7 +158,7 @@ function App() {
                   checked={difficulty === '1d-y'} 
                   onChange={() => setDifficulty('1d-y')} 
                 />
-                <span className="radio-label">1(たて)</span>
+                <span className="radio-label">たて</span>
               </label>
               <label>
                 <input 
@@ -168,7 +168,7 @@ function App() {
                   checked={difficulty === '1d-x'} 
                   onChange={() => setDifficulty('1d-x')} 
                 />
-                <span className="radio-label">2(よこ)</span>
+                <span className="radio-label">よこ</span>
               </label>
               <label>
                 <input 
@@ -178,7 +178,7 @@ function App() {
                   checked={difficulty === '2d'} 
                   onChange={() => setDifficulty('2d')} 
                 />
-                <span className="radio-label">3(ほうがん)</span>
+                <span className="radio-label">ほうがん</span>
               </label>
             </div>
           </div>
@@ -212,7 +212,7 @@ function App() {
                   checked={!includeBottom} 
                   onChange={() => setIncludeBottom(false)} 
                 />
-                <span className="radio-label">基本（上・左・右）</span>
+                <span className="radio-label">上・右・左から</span>
               </label>
               <label>
                 <input 
@@ -222,7 +222,7 @@ function App() {
                   checked={includeBottom} 
                   onChange={() => setIncludeBottom(true)} 
                 />
-                <span className="radio-label">応用（下も含める）</span>
+                <span className="radio-label">下も</span>
               </label>
             </div>
           </div>
@@ -262,14 +262,14 @@ function App() {
             {waitingNext ? (isCorrect ? 'せいかい！' : 'ざんねん！') : 'きいて、えらんで「けってい」をおしてね'}
           </div>
 
-          <div 
-            className={`grid-container mode-${difficulty}`}
-            style={{ 
-              gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
-              maxWidth: `${gridSize * 70}px`,
-              '--full-size': `${gridSize * 60 + (gridSize - 1) * 8}px`
-            } as React.CSSProperties}
-          >
+          <div className="paper-container">
+            <div 
+              className={`grid-container mode-${difficulty}`}
+              style={{ 
+                gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+                '--full-size': `${gridSize * 60}px`
+              } as React.CSSProperties}
+            >
             {Array.from({ length: gridRows }).map((_, r) => 
               Array.from({ length: gridCols }).map((_, c) => {
                 const q = questions[currentIdx];
@@ -300,6 +300,7 @@ function App() {
                 );
               })
             )}
+            </div>
           </div>
           
           <div className="action-buttons">
