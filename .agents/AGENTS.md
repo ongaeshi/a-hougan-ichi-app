@@ -1,8 +1,8 @@
 # Critical Technical Rules
 - **OS Environment**: Windows
-- **Command Execution**: To ensure terminal processes (Node.js, npm, etc.) terminate correctly on Windows, you must **always** prepend `cmd /c` to all shell commands.
+- **Command Execution**: To ensure terminal processes (Node.js, npm, etc.) terminate correctly on Windows, you must prepend `cmd /c` to commands running node or npm scripts.
   - Example: `cmd /c npm install`, `cmd /c npm run dev`, `cmd /c node server.js`.
-  - Failure to do this will cause the process to hang; this is mandatory.
+  - Failure to do this for node/npm processes will cause the process to hang; this is mandatory. Standard executables like `git` do not require this.
 
 # Project Information: Elementary School Admission "Grid Position" Web App
 
