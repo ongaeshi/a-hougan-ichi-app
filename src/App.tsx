@@ -6,7 +6,7 @@ import { playCorrectSound, playIncorrectSound, playPerfectSound } from './utils/
 type GameState = 'start' | 'playing' | 'result';
 type DirectionY = 'top' | 'bottom';
 type DirectionX = 'left' | 'right';
-type DifficultyMode = '1d-y' | '1d-x' | '2d';
+type DifficultyMode = '1d-y' | '1d-x' | '2d' | 'continuous';
 
 interface Question {
   row: number;
@@ -36,29 +36,63 @@ function App() {
   // Generate questions when starting
   const startGame = () => {
     const newQuestions: Question[] = [];
+    
+    // Initial position for continuous mode
+    let currentR = Math.floor(Math.random() * gridSize);
+    let currentC = Math.floor(Math.random() * gridSize);
+
     for (let i = 0; i < TOTAL_QUESTIONS; i++) {
-      const r = difficulty === '1d-x' ? 0 : Math.floor(Math.random() * gridSize);
-      const c = difficulty === '1d-y' ? 0 : Math.floor(Math.random() * gridSize);
-      
-      const dirY: DirectionY = includeBottom && Math.random() > 0.5 ? 'bottom' : 'top';
-      const dirX: DirectionX = Math.random() > 0.5 ? 'right' : 'left';
-      
-      const displayRow = dirY === 'top' ? r + 1 : gridSize - r;
-      const displayCol = dirX === 'left' ? c + 1 : gridSize - c;
-      
-      const textY = dirY === 'top' ? '上' : '下';
-      const textX = dirX === 'left' ? '左' : '右';
-      
-      let text = '';
-      if (difficulty === '1d-y') {
-        text = `${textY}から、${displayRow}番目`;
-      } else if (difficulty === '1d-x') {
-        text = `${textX}から、${displayCol}番目`;
+      if (difficulty === 'continuous' && i > 0) {
+        let deltaR = 0;
+        let deltaC = 0;
+        while (true) {
+          const possibleDeltaR = (Math.floor(Math.random() * (gridSize - 1)) + 1) * (Math.random() > 0.5 ? 1 : -1);
+          const possibleDeltaC = (Math.floor(Math.random() * (gridSize - 1)) + 1) * (Math.random() > 0.5 ? 1 : -1);
+          if (currentR + possibleDeltaR >= 0 && currentR + possibleDeltaR < gridSize &&
+              currentC + possibleDeltaC >= 0 && currentC + possibleDeltaC < gridSize) {
+            deltaR = possibleDeltaR;
+            deltaC = possibleDeltaC;
+            break;
+          }
+        }
+        
+        const moveYText = deltaR < 0 ? `うえに${Math.abs(deltaR)}つ` : `したに${deltaR}つ`;
+        const moveXText = deltaC < 0 ? `ひだりに${Math.abs(deltaC)}つ` : `みぎに${deltaC}つ`;
+        const text = `${moveYText}、${moveXText}、うごかしてください`;
+        
+        currentR += deltaR;
+        currentC += deltaC;
+        
+        newQuestions.push({ row: currentR, col: currentC, dirY: 'top', dirX: 'left', text });
       } else {
-        text = `${textY}から、${displayRow}番目。${textX}から、${displayCol}番目`;
+        let r = currentR;
+        let c = currentC;
+        
+        if (difficulty !== 'continuous') {
+          r = difficulty === '1d-x' ? 0 : Math.floor(Math.random() * gridSize);
+          c = difficulty === '1d-y' ? 0 : Math.floor(Math.random() * gridSize);
+        }
+        
+        const dirY: DirectionY = includeBottom && Math.random() > 0.5 ? 'bottom' : 'top';
+        const dirX: DirectionX = Math.random() > 0.5 ? 'right' : 'left';
+        
+        const displayRow = dirY === 'top' ? r + 1 : gridSize - r;
+        const displayCol = dirX === 'left' ? c + 1 : gridSize - c;
+        
+        const textY = dirY === 'top' ? '上' : '下';
+        const textX = dirX === 'left' ? '左' : '右';
+        
+        let text = '';
+        if (difficulty === '1d-y') {
+          text = `${textY}から、${displayRow}番目`;
+        } else if (difficulty === '1d-x') {
+          text = `${textX}から、${displayCol}番目`;
+        } else {
+          text = `${textY}から、${displayRow}番目。${textX}から、${displayCol}番目`;
+        }
+        
+        newQuestions.push({ row: r, col: c, dirY, dirX, text });
       }
-      
-      newQuestions.push({ row: r, col: c, dirY, dirX, text });
     }
     setQuestions(newQuestions);
     setCurrentIdx(0);
@@ -180,6 +214,16 @@ function App() {
                 />
                 <span className="radio-label">ほうがん</span>
               </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="difficulty" 
+                  className="radio-input"
+                  checked={difficulty === 'continuous'} 
+                  onChange={() => setDifficulty('continuous')} 
+                />
+                <span className="radio-label">れんぞく</span>
+              </label>
             </div>
           </div>
 
@@ -276,8 +320,15 @@ function App() {
                 const isActualCorrect = q?.row === r && q?.col === c;
                 
                 const isSelected = selectedCell?.r === r && selectedCell?.c === c;
+                
+                const prevQ = difficulty === 'continuous' && currentIdx > 0 ? questions[currentIdx - 1] : null;
+                const isOrigin = prevQ?.row === r && prevQ?.col === c;
 
                 let cellClass = 'grid-cell';
+                
+                if (isOrigin) {
+                  cellClass += ' origin';
+                }
                 
                 if (isSelected) {
                   if (isCorrect === null) {
