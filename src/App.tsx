@@ -6,7 +6,7 @@ import { playCorrectSound, playIncorrectSound, playPerfectSound } from './utils/
 type GameState = 'start' | 'playing' | 'result';
 type DirectionY = 'top' | 'bottom';
 type DirectionX = 'left' | 'right';
-type DifficultyMode = '1d-y' | '1d-x' | '2d' | 'continuous';
+type DifficultyMode = '1d-y' | '1d-x' | '2d' | 'continuous' | 'advanced';
 
 interface Question {
   row: number;
@@ -17,6 +17,94 @@ interface Question {
 }
 
 const TOTAL_QUESTIONS = 10;
+
+const pickRandom = <T,>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
+
+const generateAdvancedQuestionText = (
+  r: number,
+  c: number,
+  gridSize: number,
+  dirY: DirectionY,
+  dirX: DirectionX
+): string => {
+  const isOdd = gridSize % 2 === 1;
+  const mid = Math.floor(gridSize / 2);
+
+  // Center of both row and column
+  if (isOdd && r === mid && c === mid && Math.random() < 0.65) {
+    return pickRandom([
+      'どまんなか',
+      'まんなかのぎょうの、まんなかのれつ',
+      'まんなかのれつの、まんなかのぎょう',
+    ]);
+  }
+
+  const displayRow = dirY === 'top' ? r + 1 : gridSize - r;
+  const displayCol = dirX === 'left' ? c + 1 : gridSize - c;
+  const textY = dirY === 'top' ? '上' : '下';
+  const textX = dirX === 'left' ? '左' : '右';
+
+  let partY = '';
+  if (r === 0) {
+    partY = pickRandom([
+      'いちばん上',
+      'いちばん上のぎょう',
+      'うえはし',
+      'うえはしのぎょう',
+      '上から、1ぎょうめ',
+    ]);
+  } else if (r === gridSize - 1) {
+    partY = pickRandom([
+      'いちばん下',
+      'いちばん下のぎょう',
+      'したはし',
+      'したはしのぎょう',
+      '下から、1ぎょうめ',
+      `上から、${gridSize}ぎょうめ`,
+    ]);
+  } else if (isOdd && r === mid && Math.random() < 0.7) {
+    partY = pickRandom([
+      'まんなかのぎょう',
+      'たてのまんなか',
+      `${textY}から、${displayRow}ぎょうめ`,
+    ]);
+  } else {
+    partY = `${textY}から、${displayRow}ぎょうめ`;
+  }
+
+  let partX = '';
+  if (c === 0) {
+    partX = pickRandom([
+      'いちばん左',
+      'いちばん左のれつ',
+      'ひだりはし',
+      'ひだりはしのれつ',
+      '左から、1れつめ',
+    ]);
+  } else if (c === gridSize - 1) {
+    partX = pickRandom([
+      'いちばん右',
+      'いちばん右のれつ',
+      'みぎはし',
+      'みぎはしのれつ',
+      '右から、1れつめ',
+    ]);
+  } else if (isOdd && c === mid && Math.random() < 0.7) {
+    partX = pickRandom([
+      'まんなかのれつ',
+      'よこのまんなか',
+      `${textX}から、${displayCol}れつめ`,
+    ]);
+  } else {
+    partX = `${textX}から、${displayCol}れつめ`;
+  }
+
+  // Randomly swap row/column order in advanced mode
+  if (Math.random() < 0.4) {
+    return `${partX}。${partY}`;
+  }
+  return `${partY}。${partX}`;
+};
 
 function App() {
   const [gameState, setGameState] = useState<GameState>('start');
@@ -32,6 +120,8 @@ function App() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [waitingNext, setWaitingNext] = useState<boolean>(false);
   const [repeatsLeft, setRepeatsLeft] = useState<number | 'unlimited'>('unlimited');
+
+  const speechRate = difficulty === 'advanced' ? 1.15 : 0.8;
 
   // Generate questions when starting
   const startGame = () => {
@@ -87,6 +177,8 @@ function App() {
           text = `${textY}から、${displayRow}番目`;
         } else if (difficulty === '1d-x') {
           text = `${textX}から、${displayCol}番目`;
+        } else if (difficulty === 'advanced') {
+          text = generateAdvancedQuestionText(r, c, gridSize, dirY, dirX);
         } else {
           text = `${textY}から、${displayRow}番目。${textX}から、${displayCol}番目`;
         }
@@ -117,11 +209,11 @@ function App() {
       if (q) {
         // Small delay before speaking so UI has time to render
         setTimeout(() => {
-          speak(q.text);
+          speak(q.text, speechRate);
         }, 500);
       }
     }
-  }, [gameState, currentIdx, questions, waitingNext, gridSize]);
+  }, [gameState, currentIdx, questions, waitingNext, gridSize, speechRate]);
 
   const handleCellClick = (r: number, c: number) => {
     if (waitingNext || gameState !== 'playing') return;
@@ -163,7 +255,7 @@ function App() {
     if (gameState === 'playing' && !waitingNext) {
       if (repeatsLeft === 'unlimited' || repeatsLeft > 0) {
         const q = questions[currentIdx];
-        speak(q.text);
+        speak(q.text, speechRate);
         
         if (typeof repeatsLeft === 'number') {
           setRepeatsLeft(r => (r as number) - 1);
@@ -213,6 +305,16 @@ function App() {
                   onChange={() => setDifficulty('2d')} 
                 />
                 <span className="radio-label">ほうがん</span>
+              </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="difficulty" 
+                  className="radio-input"
+                  checked={difficulty === 'advanced'} 
+                  onChange={() => setDifficulty('advanced')} 
+                />
+                <span className="radio-label">おうよう</span>
               </label>
               <label>
                 <input 

@@ -1,4 +1,4 @@
-export const speak = (text: string) => {
+export const speak = (text: string, rate: number = 0.8) => {
   if (!('speechSynthesis' in window)) {
     console.warn('Speech synthesis not supported');
     return;
@@ -9,7 +9,7 @@ export const speak = (text: string) => {
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'ja-JP';
-  utterance.rate = 0.8; // Slower for kids
+  utterance.rate = rate; // Default slower for kids (0.8), faster for advanced mode
   utterance.pitch = 1.1; // Slightly higher pitch
 
   // Try to find a female/child-like Japanese voice if available
