@@ -121,7 +121,7 @@ function App() {
   const [waitingNext, setWaitingNext] = useState<boolean>(false);
   const [repeatsLeft, setRepeatsLeft] = useState<number | 'unlimited'>('unlimited');
 
-  const speechRate = difficulty === 'advanced' ? 1.15 : 0.8;
+  const speechRate = difficulty === 'advanced' ? 0.95 : 0.8;
 
   // Generate questions when starting
   const startGame = () => {
